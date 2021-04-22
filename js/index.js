@@ -11,7 +11,9 @@ const createCard = (dataVideo) => {
   const videoId =
     typeof dataVideo.id === "string" ? dataVideo.id : dataVideo.id.videoId;
   const titleVideo = dataVideo.snippet.title;
-  const viewCount = dataVideo.statistics ? dataVideo.statistics.viewCount : null;
+  const viewCount = dataVideo.statistics
+    ? dataVideo.statistics.viewCount
+    : null;
   const dateVideo = dataVideo.snippet.publishedAt;
   const channelTitle = dataVideo.snippet.channelTitle;
   const card = document.createElement("div");
@@ -58,16 +60,16 @@ const userAvatar = document.querySelector(".user-avatar");
 const handleSuccessAuth = (data) => {
   authBtn.classList.add("hide");
   userAvatar.classList.remove("hide");
-  userAvatar.src = "";
-  userAvatar.alt = "";
-  getChannel();
+  userAvatar.src = data.getImageUrl();
+  userAvatar.alt = data.getName();
 };
 
 const handleNoAuth = () => {
+  console.log("click");
   authBtn.classList.remove("hide");
   userAvatar.classList.add("hide");
-  userAvatar.src = data.getImageUrl();
-  userAvatar.alt = data.getName();
+  userAvatar.src = "";
+  userAvatar.alt = "";
 };
 
 const handleAuth = () => {
@@ -105,12 +107,12 @@ function initClient() {
       updateStatusAuth(gapi.auth2.getAuthInstance());
       authBtn.addEventListener("click", handleAuth);
       userAvatar.addEventListener("click", handleSignOut);
-    })
-    .catch(() => {
-      authBtn.removeEventListener("click", handleAuth);
-      userAvatar.removeEventListener("click", handleSignOut);
-      alert("Авторизация не возможна!");
     });
+  // .catch(() => {
+  //   authBtn.removeEventListener("click", handleAuth);
+  //   userAvatar.removeEventListener("click", handleSignOut);
+  //   alert("Авторизация не возможна!");
+  //});
 }
 
 gapi.load("client:auth2", initClient);
