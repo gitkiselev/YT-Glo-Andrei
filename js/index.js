@@ -11,7 +11,7 @@ const createCard = (dataVideo) => {
   const videoId =
     typeof dataVideo.id === "string" ? dataVideo.id : dataVideo.id.videoId;
   const titleVideo = dataVideo.snippet.title;
-  const viewCount = dataVideo.statistics?.viewCount;
+  const viewCount = dataVideo.statistics ? dataVideo.statistics.viewCount : null;
   const dateVideo = dataVideo.snippet.publishedAt;
   const channelTitle = dataVideo.snippet.channelTitle;
   const card = document.createElement("div");
@@ -60,6 +60,7 @@ const handleSuccessAuth = (data) => {
   userAvatar.classList.remove("hide");
   userAvatar.src = "";
   userAvatar.alt = "";
+  getChannel();
 };
 
 const handleNoAuth = () => {
@@ -113,3 +114,15 @@ function initClient() {
 }
 
 gapi.load("client:auth2", initClient);
+
+const getChannel = () => {
+  gapi.client.youtube.channels
+    .list({
+      part: "snippet, contentDetails, statistics",
+      // ID канала
+      id: "UCVswRUcKC-M35RzgPRv8qUg",
+    })
+    .then((response) => {
+      console.log(response);
+    });
+};
