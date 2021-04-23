@@ -5,7 +5,10 @@ const CLIENT_ID =
 const gloAcademyList = document.querySelector(".glo-academy-list");
 const trendingList = document.querySelector(".trending-list");
 const musicList = document.querySelector(".music-list");
-
+const navMenuMore = document.querySelector(".nav-menu-more");
+const showMore = document.querySelector(".show-more");
+const formSearch = document.querySelector(".form-search");
+const navMenuSubscriptions = document.querySelector(".nav-menu-subscriptions");
 const createCard = (dataVideo) => {
   const imgUrl = dataVideo.snippet.thumbnails.high.url;
   const videoId =
@@ -48,9 +51,31 @@ const createList = (wrapper, listVideo) => {
     wrapper.append(card);
   });
 };
-createList(gloAcademyList, gloAcademy);
-createList(trendingList, trending);
-createList(musicList, music);
+
+const createMenuSubscriptionsItem = (item) => {
+  console.log(item);
+  const menuItem = document.createElement("li");
+  menuItem.classList.add("nav-item");
+  menuItem.innerHTML = `
+  <a class="nav-link" href="https://youtube.com/channel/${item.snippet.resourceId.channelId}">
+    <img
+      src="${item.snippet.thumbnails.default.url}"
+      alt="Photo: ${item.snippet.title}"
+      class="nav-image"
+    />
+    <span class="nav-text">${item.snippet.title}</span>
+  </a>`;
+  return menuItem;
+};
+
+const createMenuSubscriptions = (data) => {
+  console.log(data);
+  navMenuSubscriptions.textContent = "";
+  data.forEach((item) =>
+    navMenuSubscriptions.append(createMenuSubscriptionsItem(item))
+  );
+};
+
 
 // youtube API
 
@@ -62,6 +87,11 @@ const handleSuccessAuth = (data) => {
   userAvatar.classList.remove("hide");
   userAvatar.src = data.getImageUrl();
   userAvatar.alt = data.getName();
+
+  requestSubscriptions((data) => {
+    console.log(data);
+    createMenuSubscriptions(data);
+  });
 };
 
 const handleNoAuth = () => {
@@ -107,7 +137,8 @@ function initClient() {
       updateStatusAuth(gapi.auth2.getAuthInstance());
       authBtn.addEventListener("click", handleAuth);
       userAvatar.addEventListener("click", handleSignOut);
-    });
+    })
+    .then(loadScreen);
   // .catch(() => {
   //   authBtn.removeEventListener("click", handleAuth);
   //   userAvatar.removeEventListener("click", handleSignOut);
@@ -128,3 +159,100 @@ const getChannel = () => {
       console.log(response);
     });
 };
+
+const requestVideos = (channelId, cb, maxResults = 6) => {
+  gapi.client.youtube.search
+    .list({
+      part: "snippet",
+      channelId,
+      maxResults,
+      order: "date",
+    })
+    .execute((response) => {
+      cb(response.items);
+    });
+};
+
+const requestTrending = (cb, maxResults = 6) => {
+  gapi.client.youtube.videos
+    .list({
+      part: "snippet, statistics",
+      chart: "mostPopular",
+      regionCode: "RU",
+      maxResults,
+    })
+    .execute((response) => {
+      cb(response.items);
+    });
+};
+
+const requestMusic = (cb, maxResults = 6) => {
+  gapi.client.youtube.videos
+    .list({
+      part: "snippet, statistics",
+      chart: "mostPopular",
+      regionCode: "RU",
+      maxResults,
+      videoCategoryId: "10",
+    })
+    .execute((response) => {
+      cb(response.items);
+    });
+};
+
+const requestSearch = (searchText, cb, maxResults = 12) => {
+  gapi.client.youtube.search
+    .list({
+      part: "snippet",
+      q: searchText,
+      maxResults,
+      order: "relevance",
+    })
+    .execute((response) => {
+      cb(response.items);
+    });
+};
+
+const requestSubscriptions = (callback, maxResults = 3) => {
+  gapi.client.youtube.subscriptions
+    .list({
+      mine: true,
+      part: "snippet",
+      maxResults,
+      order: "unread",
+    })
+    .execute((response) => {
+      console.log(response.items);
+      callback(response.items);
+    });
+};
+const loadScreen = () => {
+  requestVideos("UCVswRUcKC-M35RzgPRv8qUg", (data) => {
+    createList(gloAcademyList, data);
+  });
+  requestTrending((data) => {
+    createList(trendingList, data);
+  });
+
+  requestMusic((data) => {
+    createList(musicList, data);
+  });
+
+  // createList(gloAcademyList, gloAcademy);
+  // createList(trendingList, trending);
+  // createList(musicList, music);
+};
+
+showMore.addEventListener("click", (event) => {
+  event.preventDefault();
+  navMenuMore.classList.toggle("nav-menu-more-show");
+});
+
+formSearch.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const value = formSearch.elements.search.value;
+
+  requestSearch(value, (data) => {
+    createList(gloAcademyList, data);
+  });
+});
